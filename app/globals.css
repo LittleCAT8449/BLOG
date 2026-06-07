@@ -122,6 +122,16 @@
 .dark .prose td { border-color: var(--color-gray-600); }
 .dark .prose hr { border-color: var(--color-gray-700); }
 
+/* Page background */
+body {
+  background: linear-gradient(135deg, #e8f0fe 0%, #f3e8ff 30%, #e0f2fe 60%, #fce7f3 100%);
+  background-attachment: fixed;
+}
+.dark body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 30%, #0f172a 60%, #1a0a2e 100%);
+  background-attachment: fixed;
+}
+
 /* Card hover effects */
 .card-hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
