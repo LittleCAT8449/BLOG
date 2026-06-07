@@ -39,6 +39,7 @@ interface SiteConfig {
   aboutEmail?: string
   aboutLocation?: string
   aboutAvatar?: string
+  aboutAvatarImage?: string
 }
 
 // ── Tab: Post List ──
@@ -188,6 +189,7 @@ function SiteSettingsTab() {
     aboutEmail: '',
     aboutLocation: '',
     aboutAvatar: '',
+    aboutAvatarImage: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -311,6 +313,18 @@ function SiteSettingsTab() {
               onChange={(e) => setConfig({ ...config, aboutAvatar: e.target.value })}
               placeholder="B"
               maxLength={3}
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              头像图片 URL（留空则显示文字头像）
+            </label>
+            <input
+              type="text"
+              value={config.aboutAvatarImage || ''}
+              onChange={(e) => setConfig({ ...config, aboutAvatarImage: e.target.value })}
+              placeholder="/Photo/avatar.jpg 或 https://..."
               className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
             />
           </div>

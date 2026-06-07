@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Globe, AtSign, Mail, MapPin, Coffee } from 'lucide-react'
 import { getSiteConfig } from '@/lib/site-config'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'About',
   description: 'Learn more about this blog and its author',
@@ -20,9 +22,19 @@ export default function AboutPage() {
       <div className="animate-fade-in">
         {/* Avatar & Name */}
         <div className="text-center mb-12">
-          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-primary-500/25">
-            {config.aboutAvatar || '?'}
-          </div>
+          {(config as any).aboutAvatarImage ? (
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden shadow-lg shadow-primary-500/25 border-2 border-white dark:border-gray-800">
+              <img
+                src={(config as any).aboutAvatarImage}
+                alt={config.aboutTitle || 'Avatar'}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-primary-500/25">
+              {config.aboutAvatar || '?'}
+            </div>
+          )}
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">
             {config.aboutTitle || 'About Me'}
           </h1>

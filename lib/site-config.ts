@@ -16,6 +16,7 @@ export interface SiteConfig {
   aboutEmail: string
   aboutLocation: string
   aboutAvatar: string
+  aboutAvatarImage: string
 }
 
 const defaultConfig: SiteConfig = {
@@ -31,6 +32,7 @@ const defaultConfig: SiteConfig = {
   aboutEmail: 'hello@example.com',
   aboutLocation: 'Somewhere on Earth',
   aboutAvatar: 'B',
+  aboutAvatarImage: '',
 }
 
 export function getSiteConfig(): SiteConfig {
