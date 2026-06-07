@@ -165,7 +165,8 @@ export function createPost(
   frontmatter: PostFrontmatter,
   content: string
 ): void {
-  const filePath = path.join(postsDirectory, `${slug}.md`)
+  const targetDir = frontmatter.draft ? draftsDirectory : postsDirectory
+  const filePath = path.join(targetDir, `${slug}.md`)
   if (fs.existsSync(filePath)) {
     throw new Error(`文章 "${slug}" 已存在`)
   }
