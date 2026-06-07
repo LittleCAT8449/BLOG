@@ -68,19 +68,12 @@ function readMarkdownFiles(dir: string): Post[] {
   )
 }
 
-let postsCache: Post[] | null = null
-let draftsCache: Post[] | null = null
-
 export function getAllPosts(): Post[] {
-  if (postsCache) return postsCache
-  postsCache = readMarkdownFiles(postsDirectory).filter((p) => !p.frontmatter.draft)
-  return postsCache
+  return readMarkdownFiles(postsDirectory).filter((p) => !p.frontmatter.draft)
 }
 
 export function getAllDrafts(): Post[] {
-  if (draftsCache) return draftsCache
-  draftsCache = readMarkdownFiles(draftsDirectory)
-  return draftsCache
+  return readMarkdownFiles(draftsDirectory)
 }
 
 export function getPostBySlug(slug: string): Post | undefined {
@@ -133,8 +126,7 @@ export function getPaginatedPosts(page: number, perPage: number = 9): { posts: P
 }
 
 export function invalidateCache(): void {
-  postsCache = null
-  draftsCache = null
+  // No-op — cache removed, always reads from disk
 }
 
 function buildFrontmatterString(frontmatter: PostFrontmatter): string {
