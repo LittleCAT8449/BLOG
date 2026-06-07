@@ -3,12 +3,10 @@ import type { Metadata } from 'next'
 import { getPostsByTag, getAllTags } from '@/lib/posts'
 import PostGrid from '@/components/posts/PostGrid'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   params: Promise<{ tag: string }>
-}
-
-export async function generateStaticParams() {
-  return getAllTags().map(({ tag }) => ({ tag: tag.toLowerCase() }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

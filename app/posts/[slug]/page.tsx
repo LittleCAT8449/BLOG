@@ -7,12 +7,10 @@ import Link from 'next/link'
 import { Calendar, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react'
 import GiscusComments from '@/components/posts/GiscusComments'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   params: Promise<{ slug: string }>
-}
-
-export async function generateStaticParams() {
-  return getAllPosts().map((post) => ({ slug: post.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
