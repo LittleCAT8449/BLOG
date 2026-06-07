@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const bgStyle = siteConfig.pageBackgroundImage
     ? {
-        backgroundImage: `url(${siteConfig.pageBackgroundImage})`,
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url(${siteConfig.pageBackgroundImage})`,
         backgroundSize: 'cover' as const,
         backgroundPosition: 'center' as const,
         backgroundAttachment: 'fixed' as const,
