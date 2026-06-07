@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Lock, Eye, FileText, Tag, Hash, Clock, Calendar, Unlock, ChevronRight } from 'lucide-react'
-import TagBadge from '@/components/ui/TagBadge'
-import Link from 'next/link'
+import { useState, useEffect, useCallback } from 'react'
+import { Lock, Eye, FileText, Tag, Trash2, Edit, Plus, Unlock, Settings, ExternalLink, EyeOff } from 'lucide-react'
+import MarkdownEditor from '@/components/admin/MarkdownEditor'
 
 interface PostInfo {
   slug: string
@@ -12,6 +11,12 @@ interface PostInfo {
   tags: string[]
   description: string
   draft: boolean
+  author?: string
+}
+
+interface EditData extends PostInfo {
+  content: string
+  coverImage: string
 }
 
 interface Stats {
@@ -21,6 +26,236 @@ interface Stats {
   totalViews: number
 }
 
+interface SiteConfig {
+  heroBackgroundImage: string
+  heroTitle: string
+  heroDescription: string
+}
+
+// ── Tab: Post List ──
+function PostListTab({
+  posts,
+  drafts,
+  stats,
+  onEdit,
+  onRefresh,
+  loading,
+}: {
+  posts: PostInfo[]
+  drafts: PostInfo[]
+  stats: Stats
+  onEdit: (post: PostInfo) => void
+  onRefresh: () => void
+  loading: boolean
+}) {
+  const deletePost = async (slug: string, title: string) => {
+    if (!confirm(`确定要删除「${title}」吗？此操作不可恢复。`)) return
+    try {
+      const res = await fetch('/api/admin/posts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      })
+      if (res.ok) onRefresh()
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: '已发布', value: stats.totalPosts, icon: FileText, color: 'text-green-500' },
+          { label: '草稿', value: stats.totalDrafts, icon: EyeOff, color: 'text-yellow-500' },
+          { label: '标签', value: stats.totalTags, icon: Tag, color: 'text-primary-500' },
+          { label: '总阅读量', value: stats.totalViews, icon: Eye, color: 'text-accent-500' },
+        ].map((s) => (
+          <div key={s.label} className="p-3 rounded-xl glass">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{s.label}</p>
+            <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Published */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+          已发布文章 ({posts.length})
+        </h3>
+        <div className="space-y-2">
+          {posts.map((post) => (
+            <PostRow key={post.slug} post={post} onEdit={onEdit} onDelete={deletePost} />
+          ))}
+          {posts.length === 0 && (
+            <p className="text-sm text-gray-400 py-4 text-center">暂无已发布文章</p>
+          )}
+        </div>
+      </div>
+
+      {/* Drafts */}
+      {drafts.length > 0 && (
+        <div>
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            草稿 ({drafts.length})
+          </h3>
+          <div className="space-y-2">
+            {drafts.map((post) => (
+              <PostRow key={post.slug} post={post} onEdit={onEdit} onDelete={deletePost} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PostRow({
+  post,
+  onEdit,
+  onDelete,
+}: {
+  post: PostInfo
+  onEdit: (post: PostInfo) => void
+  onDelete: (slug: string, title: string) => void
+}) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl glass hover:border-primary-200 dark:hover:border-primary-800 transition-all group">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{post.title}</h4>
+          {post.draft && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 font-medium flex-shrink-0">
+              草稿
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+          <span className="font-mono text-[11px]">{post.slug}</span>
+          <span>{new Date(post.date).toLocaleDateString('zh-CN')}</span>
+          {post.author && <span>by {post.author}</span>}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 ml-4">
+        <a
+          href={`/posts/${post.slug}`}
+          target="_blank"
+          rel="noopener"
+          className="p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+          title="查看"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </a>
+        <button
+          onClick={() => onEdit(post)}
+          className="p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+          title="编辑"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onDelete(post.slug, post.title)}
+          className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
+          title="删除"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Tab: Site Settings ──
+function SiteSettingsTab() {
+  const [config, setConfig] = useState<SiteConfig>({
+    heroBackgroundImage: '',
+    heroTitle: '',
+    heroDescription: '',
+  })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/site-config')
+      .then((r) => r.json())
+      .then((data) => setConfig(data))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    setMsg('')
+    try {
+      const res = await fetch('/api/admin/site-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      })
+      if (res.ok) {
+        setMsg('✅ 设置已保存')
+      } else {
+        setMsg('❌ 保存失败')
+      }
+    } catch {
+      setMsg('❌ 网络错误')
+    }
+    setSaving(false)
+  }
+
+  if (loading) return <p className="text-sm text-gray-400 py-8">加载中...</p>
+
+  return (
+    <div className="space-y-6">
+      <div className="p-6 rounded-xl glass space-y-4">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">主页 Hero 设置</h3>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">主页大标题</label>
+          <input
+            type="text"
+            value={config.heroTitle}
+            onChange={(e) => setConfig({ ...config, heroTitle: e.target.value })}
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">主页描述文字</label>
+          <input
+            type="text"
+            value={config.heroDescription}
+            onChange={(e) => setConfig({ ...config, heroDescription: e.target.value })}
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            主页背景图 URL（留空则无背景）
+          </label>
+          <input
+            type="text"
+            value={config.heroBackgroundImage}
+            onChange={(e) => setConfig({ ...config, heroBackgroundImage: e.target.value })}
+            placeholder="https://images.unsplash.com/photo-xxx?w=1920&q=80"
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white text-sm font-semibold rounded-xl transition-colors"
+        >
+          {saving ? '保存中...' : '保存设置'}
+        </button>
+        {msg && <span className={`text-sm ${msg.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>{msg}</span>}
+      </div>
+    </div>
+  )
+}
+
+// ── Main Dashboard ──
+
 export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
@@ -29,7 +264,13 @@ export default function AdminDashboard() {
   const [drafts, setDrafts] = useState<PostInfo[]>([])
   const [stats, setStats] = useState<Stats>({ totalPosts: 0, totalDrafts: 0, totalTags: 0, totalViews: 0 })
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'published' | 'drafts'>('published')
+
+  // Editor state
+  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'settings'>('posts')
+  const [editingPost, setEditingPost] = useState<EditData | null>(null)
+  const [loadingContent, setLoadingContent] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editorMsg, setEditorMsg] = useState('')
 
   const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123'
 
@@ -43,23 +284,101 @@ export default function AdminDashboard() {
     }
   }
 
+  const loadPosts = useCallback(async () => {
+    try {
+      const [postsRes, draftsRes, statsRes] = await Promise.all([
+        fetch('/api/admin/posts'),
+        fetch('/api/admin/drafts'),
+        fetch('/api/admin/stats'),
+      ])
+      const [postsData, draftsData, statsData] = await Promise.all([
+        postsRes.json(),
+        draftsRes.json(),
+        statsRes.json(),
+      ])
+      setPosts(postsData.posts || [])
+      setDrafts(draftsData.drafts || [])
+      setStats(statsData)
+    } catch { /* */ }
+  }, [])
+
   useEffect(() => {
     if (!authenticated) return
     setLoading(true)
+    loadPosts().finally(() => setLoading(false))
+  }, [authenticated, loadPosts])
 
-    Promise.all([
-      fetch('/api/admin/posts').then((r) => r.json()),
-      fetch('/api/admin/drafts').then((r) => r.json()),
-      fetch('/api/admin/stats').then((r) => r.json()),
-    ])
-      .then(([postsData, draftsData, statsData]) => {
-        setPosts(postsData.posts || [])
-        setDrafts(draftsData.drafts || [])
-        setStats(statsData)
+  const handleEdit = async (post: PostInfo) => {
+    setLoadingContent(true)
+    setEditorMsg('')
+    try {
+      const res = await fetch(`/api/posts/content?slug=${encodeURIComponent(post.slug)}`)
+      const data = await res.json()
+      if (res.ok) {
+        setEditingPost({
+          ...post,
+          content: data.content || '',
+          coverImage: post.description || '',
+        })
+      } else {
+        setEditingPost({ ...post, content: '', coverImage: '' })
+        setEditorMsg('无法加载文章内容')
+      }
+    } catch {
+      setEditingPost({ ...post, content: '', coverImage: '' })
+      setEditorMsg('内容加载失败')
+    }
+    setLoadingContent(false)
+    setActiveTab('editor')
+  }
+
+  const handleNewPost = () => {
+    setEditingPost(null)
+    setEditorMsg('')
+    setActiveTab('editor')
+  }
+
+  const handleSave = async (data: {
+    slug: string
+    title: string
+    date: string
+    tags: string[]
+    description: string
+    coverImage: string
+    content: string
+    draft: boolean
+  }) => {
+    setSaving(true)
+    setEditorMsg('')
+    try {
+      const endpoint = editingPost ? '/api/posts/update' : '/api/posts/create'
+      const body: any = { ...data }
+      if (editingPost) body.originalSlug = editingPost.slug
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
-      .finally(() => setLoading(false))
-  }, [authenticated])
+      const result = await res.json()
 
+      if (!res.ok) {
+        setEditorMsg(result.error || '保存失败')
+        return
+      }
+
+      setEditorMsg(data.draft ? '✅ 草稿已保存！' : '✅ 文章已发布！')
+      setEditingPost(null)
+      loadPosts()
+      setActiveTab('posts')
+    } catch {
+      setEditorMsg('网络错误')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // ── Password gate ──
   if (!authenticated) {
     return (
       <div className="max-w-sm mx-auto mt-12">
@@ -67,35 +386,25 @@ export default function AdminDashboard() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-50 dark:bg-primary-950 flex items-center justify-center">
             <Lock className="w-8 h-8 text-primary-600 dark:text-primary-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Admin Access
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Enter the admin password to continue
-          </p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">后台管理</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">请输入管理员密码</p>
         </div>
-
         <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="password"
             value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              setPasswordError(false)
-            }}
-            placeholder="Password"
+            onChange={(e) => { setPassword(e.target.value); setPasswordError(false) }}
+            placeholder="输入密码"
             autoFocus
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
+            className="w-full px-4 py-3 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
           />
-          {passwordError && (
-            <p className="text-sm text-red-500 dark:text-red-400">Incorrect password</p>
-          )}
+          {passwordError && <p className="text-sm text-red-500">密码错误</p>}
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors"
+            className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
-            <Unlock className="w-4 h-4 inline mr-2" />
-            Unlock
+            <Unlock className="w-4 h-4" />
+            解锁
           </button>
         </form>
       </div>
@@ -112,121 +421,95 @@ export default function AdminDashboard() {
     )
   }
 
-  return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Published', value: stats.totalPosts, icon: FileText, color: 'text-green-500' },
-          { label: 'Drafts', value: stats.totalDrafts, icon: FileText, color: 'text-yellow-500' },
-          { label: 'Tags', value: stats.totalTags, icon: Tag, color: 'text-primary-500' },
-          { label: 'Total Views', value: stats.totalViews, icon: Eye, color: 'text-accent-500' },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              <span className="text-xs text-gray-400 dark:text-gray-500">{stat.label}</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
-          </div>
-        ))}
-      </div>
+  // ── Dashboard proper ──
+  const tabs = [
+    { id: 'editor' as const, label: editingPost ? '编辑文章' : '写文章', icon: editingPost ? Edit : Plus },
+    { id: 'posts' as const, label: '文章列表', icon: FileText },
+    { id: 'settings' as const, label: '站点设置', icon: Settings },
+  ]
 
+  const editorInitialData = editingPost
+    ? {
+        slug: editingPost.slug,
+        title: editingPost.title,
+        date: editingPost.date.split('T')[0],
+        tags: editingPost.tags,
+        description: editingPost.description || '',
+        coverImage: editingPost.coverImage || '',
+        content: editingPost.content || '',
+        draft: editingPost.draft,
+      }
+    : undefined
+
+  return (
+    <div className="space-y-6 animate-fade-in">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-100 dark:border-gray-800 pb-1">
-        {(['published', 'drafts'] as const).map((tab) => (
+      <div className="flex gap-1 border-b border-gray-100 dark:border-gray-800 pb-1 overflow-x-auto">
+        {tabs.map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-              activeTab === tab
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === tab.id
                 ? 'bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            {tab === 'published' ? 'Published' : 'Drafts'}
-            <span className="ml-2 text-xs opacity-60">
-              {tab === 'published' ? stats.totalPosts : stats.totalDrafts}
-            </span>
+            <tab.icon className="w-4 h-4" />
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Post list */}
-      <div className="space-y-2">
-        {(activeTab === 'published' ? posts : drafts).map((post) => (
-          <Link
-            key={post.slug}
-            href={`/posts/${post.slug}`}
-            className="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-800 transition-all card-hover"
-          >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                  {post.title}
-                </h3>
-                {post.draft && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400 font-medium flex-shrink-0">
-                    Draft
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {new Date(post.date).toLocaleDateString('zh-CN')}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Hash className="w-3 h-3" />
-                  {post.tags.length} tags
-                </span>
-              </div>
+      {/* Tab content */}
+      {activeTab === 'editor' && (
+        <div className="space-y-4">
+          {loadingContent && (
+            <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse flex items-center justify-center">
+              <span className="text-sm text-gray-400">加载文章内容...</span>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-300 dark:text-gray-700 flex-shrink-0 ml-4" />
-          </Link>
-        ))}
-      </div>
-
-      {/* Quick actions */}
-      <div className="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Create New Post
-            </h4>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
-              Add a new .md file to content/posts/ with frontmatter:
-            </p>
-            <pre className="text-xs bg-gray-50 dark:bg-gray-950 p-3 rounded-lg text-gray-600 dark:text-gray-400 overflow-x-auto">
-{`---
-title: "My Post Title"
-date: "2026-06-06"
-tags: ["tech", "life"]
-description: "A brief description"
----
-
-Write your content here...`}
-            </pre>
-          </div>
-          <div className="p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Manage Content
-            </h4>
-            <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
-              <li>• Posts: <code className="text-primary-600 dark:text-primary-400">content/posts/</code></li>
-              <li>• Drafts: <code className="text-primary-600 dark:text-primary-400">content/drafts/</code></li>
-              <li>• Views: <code className="text-primary-600 dark:text-primary-400">content/views.json</code></li>
-              <li>• Set draft: true in frontmatter to hide</li>
-            </ul>
-          </div>
+          )}
+          {editorMsg && (
+            <div className={`p-3 rounded-xl text-sm font-medium ${
+              editorMsg.includes('✅')
+                ? 'bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400'
+                : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
+            }`}>
+              {editorMsg}
+            </div>
+          )}
+          {!loadingContent && (
+            <MarkdownEditor
+              initialData={editorInitialData}
+              onSave={handleSave}
+              saving={saving}
+            />
+          )}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'posts' && (
+        <>
+          {/* New post button */}
+          <button
+            onClick={handleNewPost}
+            className="flex items-center gap-2 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            写新文章
+          </button>
+          <PostListTab
+            posts={posts}
+            drafts={drafts}
+            stats={stats}
+            onEdit={handleEdit}
+            onRefresh={loadPosts}
+            loading={loading}
+          />
+        </>
+      )}
+
+      {activeTab === 'settings' && <SiteSettingsTab />}
     </div>
   )
 }

@@ -14,7 +14,7 @@ export default function PostCard({ post }: { post: Post }) {
   return (
     <Link
       href={`/posts/${post.slug}`}
-      className="group block bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden card-hover animate-slide-up"
+      className="group block glass rounded-2xl overflow-hidden card-hover animate-slide-up"
     >
       {/* Cover image */}
       {post.frontmatter.coverImage ? (

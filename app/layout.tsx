@@ -24,7 +24,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300">
+      <body className="min-h-screen text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300"
+        style={{
+          background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #fdf4ff 100%)',
+        }}
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex flex-col min-h-screen">
             <Header />

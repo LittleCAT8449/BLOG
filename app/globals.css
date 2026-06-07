@@ -44,6 +44,43 @@
   50% { transform: translateY(-10px); }
 }
 
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(17, 25, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dark .glass-strong {
+  background: rgba(17, 25, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-subtle {
+  background: rgba(17, 25, 40, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
 /* Prose styling for markdown content */
 .prose {
   max-width: 65ch;

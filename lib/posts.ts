@@ -136,3 +136,93 @@ export function invalidateCache(): void {
   postsCache = null
   draftsCache = null
 }
+
+function buildFrontmatterString(frontmatter: PostFrontmatter): string {
+  const lines: string[] = ['---']
+  lines.push(`title: "${frontmatter.title}"`)
+  lines.push(`date: "${frontmatter.date.split('T')[0]}"`)
+  if (frontmatter.tags.length > 0) {
+    lines.push(`tags: [${frontmatter.tags.map((t) => `"${t}"`).join(', ')}]`)
+  }
+  if (frontmatter.description) {
+    lines.push(`description: "${frontmatter.description}"`)
+  }
+  if (frontmatter.coverImage) {
+    lines.push(`coverImage: "${frontmatter.coverImage}"`)
+  }
+  if (frontmatter.author) {
+    lines.push(`author: "${frontmatter.author}"`)
+  }
+  if (frontmatter.draft) {
+    lines.push('draft: true')
+  }
+  lines.push('---')
+  return lines.join('\n')
+}
+
+export function createPost(
+  slug: string,
+  frontmatter: PostFrontmatter,
+  content: string
+): void {
+  const filePath = path.join(postsDirectory, `${slug}.md`)
+  if (fs.existsSync(filePath)) {
+    throw new Error(`文章 "${slug}" 已存在`)
+  }
+  const frontmatterStr = buildFrontmatterString(frontmatter)
+  const fullContent = `${frontmatterStr}\n\n${content.trim()}\n`
+  const dir = path.dirname(filePath)
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(filePath, fullContent)
+  invalidateCache()
+}
+
+export function updatePost(
+  originalSlug: string,
+  newSlug: string,
+  frontmatter: PostFrontmatter,
+  content: string
+): void {
+  const oldPath = path.join(postsDirectory, `${originalSlug}.md`)
+  const draftPath = path.join(draftsDirectory, `${originalSlug}.md`)
+
+  // Determine if the post is a draft
+  let actualPath: string
+  if (fs.existsSync(oldPath)) {
+    actualPath = oldPath
+  } else if (fs.existsSync(draftPath)) {
+    actualPath = draftPath
+  } else {
+    throw new Error(`文章 "${originalSlug}" 不存在`)
+  }
+
+  const frontmatterStr = buildFrontmatterString(frontmatter)
+  const fullContent = `${frontmatterStr}\n\n${content.trim()}\n`
+
+  // If slug changed or draft status changed, move the file
+  const targetDir = frontmatter.draft ? draftsDirectory : postsDirectory
+  const newPath = path.join(targetDir, `${newSlug}.md`)
+
+  if (actualPath !== newPath) {
+    const newDir = path.dirname(newPath)
+    if (!fs.existsSync(newDir)) fs.mkdirSync(newDir, { recursive: true })
+    fs.renameSync(actualPath, newPath)
+  }
+
+  fs.writeFileSync(newPath, fullContent)
+  invalidateCache()
+}
+
+export function deletePost(slug: string): void {
+  const postsPath = path.join(postsDirectory, `${slug}.md`)
+  const draftsPath = path.join(draftsDirectory, `${slug}.md`)
+
+  if (fs.existsSync(postsPath)) {
+    fs.unlinkSync(postsPath)
+  } else if (fs.existsSync(draftsPath)) {
+    fs.unlinkSync(draftsPath)
+  } else {
+    throw new Error(`文章 "${slug}" 不存在`)
+  }
+  invalidateCache()
+}
