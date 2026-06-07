@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllPosts, getAllDrafts, getPostBySlug } from '@/lib/posts'
+import fs from 'fs'
+import path from 'path'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -9,14 +12,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '缺少 slug 参数' }, { status: 400 })
   }
 
-  const post = getPostBySlug(slug)
-  if (!post) {
-    return NextResponse.json({ error: '文章不存在' }, { status: 404 })
-  }
-
-  // Read raw file content (including frontmatter)
-  const fs = await import('fs')
-  const path = await import('path')
   const postsDir = path.join(process.cwd(), 'content/posts', `${slug}.md`)
   const draftsDir = path.join(process.cwd(), 'content/drafts', `${slug}.md`)
 

@@ -27,4 +27,4 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
