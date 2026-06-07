@@ -8,6 +8,14 @@ export interface SiteConfig {
   heroTitle: string
   heroDescription: string
   pageBackgroundImage: string
+  aboutTitle: string
+  aboutBio: string
+  aboutInterests: string
+  aboutGithub: string
+  aboutTwitter: string
+  aboutEmail: string
+  aboutLocation: string
+  aboutAvatar: string
 }
 
 const defaultConfig: SiteConfig = {
@@ -15,6 +23,14 @@ const defaultConfig: SiteConfig = {
   heroTitle: 'Welcome to My Blog',
   heroDescription: 'Thoughts, stories, and ideas about technology, design, and the world around us.',
   pageBackgroundImage: '',
+  aboutTitle: 'About Me',
+  aboutBio: 'Hello! I\'m a developer who loves building things and sharing knowledge. This blog is where I write about technology, programming, design, and whatever else catches my interest.\n\nWhen I\'m not coding, you can find me reading books, exploring new coffee shops, or hiking in the mountains. I believe in the power of writing to clarify thinking and connect with others.',
+  aboutInterests: 'Web Development, React & Next.js, UI/UX Design, Open Source, Writing, Photography, Music, Coffee',
+  aboutGithub: 'https://github.com',
+  aboutTwitter: 'https://twitter.com',
+  aboutEmail: 'hello@example.com',
+  aboutLocation: 'Somewhere on Earth',
+  aboutAvatar: 'B',
 }
 
 export function getSiteConfig(): SiteConfig {

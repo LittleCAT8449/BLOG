@@ -31,6 +31,14 @@ interface SiteConfig {
   heroTitle: string
   heroDescription: string
   pageBackgroundImage?: string
+  aboutTitle?: string
+  aboutBio?: string
+  aboutInterests?: string
+  aboutGithub?: string
+  aboutTwitter?: string
+  aboutEmail?: string
+  aboutLocation?: string
+  aboutAvatar?: string
 }
 
 // ── Tab: Post List ──
@@ -172,6 +180,14 @@ function SiteSettingsTab() {
     heroTitle: '',
     heroDescription: '',
     pageBackgroundImage: '',
+    aboutTitle: '',
+    aboutBio: '',
+    aboutInterests: '',
+    aboutGithub: '',
+    aboutTwitter: '',
+    aboutEmail: '',
+    aboutLocation: '',
+    aboutAvatar: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -261,6 +277,94 @@ function SiteSettingsTab() {
             <img src={config.pageBackgroundImage} alt="背景预览" className="w-full h-full object-cover" />
           </div>
         )}
+      </div>
+
+      {/* About Page Settings */}
+      <div className="p-6 rounded-xl glass space-y-4">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">About 页面设置</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">标题</label>
+            <input
+              type="text"
+              value={config.aboutTitle || ''}
+              onChange={(e) => setConfig({ ...config, aboutTitle: e.target.value })}
+              placeholder="About Me"
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">位置</label>
+            <input
+              type="text"
+              value={config.aboutLocation || ''}
+              onChange={(e) => setConfig({ ...config, aboutLocation: e.target.value })}
+              placeholder="Somewhere on Earth"
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">头像文字</label>
+            <input
+              type="text"
+              value={config.aboutAvatar || ''}
+              onChange={(e) => setConfig({ ...config, aboutAvatar: e.target.value })}
+              placeholder="B"
+              maxLength={3}
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">GitHub URL</label>
+            <input
+              type="text"
+              value={config.aboutGithub || ''}
+              onChange={(e) => setConfig({ ...config, aboutGithub: e.target.value })}
+              placeholder="https://github.com/..."
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Twitter URL</label>
+            <input
+              type="text"
+              value={config.aboutTwitter || ''}
+              onChange={(e) => setConfig({ ...config, aboutTwitter: e.target.value })}
+              placeholder="https://twitter.com/..."
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
+            <input
+              type="text"
+              value={config.aboutEmail || ''}
+              onChange={(e) => setConfig({ ...config, aboutEmail: e.target.value })}
+              placeholder="hello@example.com"
+              className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">个人简介（段落用空行分隔）</label>
+          <textarea
+            value={config.aboutBio || ''}
+            onChange={(e) => setConfig({ ...config, aboutBio: e.target.value })}
+            rows={5}
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 resize-y"
+            placeholder="写一些关于你的介绍..."
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">兴趣标签（逗号分隔）</label>
+          <input
+            type="text"
+            value={config.aboutInterests || ''}
+            onChange={(e) => setConfig({ ...config, aboutInterests: e.target.value })}
+            placeholder="Web, React, Design, Coffee..."
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
