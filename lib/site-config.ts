@@ -17,6 +17,7 @@ export interface SiteConfig {
   aboutLocation: string
   aboutAvatar: string
   aboutAvatarImage: string
+  forceTheme: 'system' | 'light' | 'dark'
 }
 
 const defaultConfig: SiteConfig = {
@@ -33,6 +34,7 @@ const defaultConfig: SiteConfig = {
   aboutLocation: 'Somewhere on Earth',
   aboutAvatar: 'B',
   aboutAvatarImage: '',
+  forceTheme: 'system',
 }
 
 export function getSiteConfig(): SiteConfig {

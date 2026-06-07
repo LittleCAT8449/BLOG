@@ -40,6 +40,7 @@ interface SiteConfig {
   aboutLocation?: string
   aboutAvatar?: string
   aboutAvatarImage?: string
+  forceTheme?: 'system' | 'light' | 'dark'
 }
 
 // ── Tab: Post List ──
@@ -190,6 +191,7 @@ function SiteSettingsTab() {
     aboutLocation: '',
     aboutAvatar: '',
     aboutAvatarImage: '',
+    forceTheme: 'system',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -226,6 +228,25 @@ function SiteSettingsTab() {
 
   return (
     <div className="space-y-6">
+      <div className="p-6 rounded-xl glass space-y-4">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">全局外观</h3>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">文字颜色模式</label>
+          <select
+            value={config.forceTheme || 'system'}
+            onChange={(e) => setConfig({ ...config, forceTheme: e.target.value as 'system' | 'light' | 'dark' })}
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            <option value="system">跟随系统</option>
+            <option value="light">浅色文字（适合亮背景）</option>
+            <option value="dark">深色文字（适合暗背景）</option>
+          </select>
+          <p className="text-xs text-gray-400 mt-1">
+            浅色文字=黑色字+白底，深色文字=白色字+暗底。设为"跟随系统"则自动切换。
+          </p>
+        </div>
+      </div>
+
       <div className="p-6 rounded-xl glass space-y-4">
         <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">主页 Hero 设置</h3>
         <div>

@@ -40,7 +40,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="min-h-screen text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300"
         style={bgStyle || undefined}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={siteConfig.forceTheme === 'system' ? 'system' : siteConfig.forceTheme}
+          forcedTheme={siteConfig.forceTheme !== 'system' ? siteConfig.forceTheme : undefined}
+          enableSystem={siteConfig.forceTheme === 'system'}
+        >
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-1">{children}</main>
