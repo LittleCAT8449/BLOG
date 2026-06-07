@@ -413,18 +413,36 @@ function PhotosTab({ onSelectPhoto }: { onSelectPhoto?: (url: string) => void })
 
   useEffect(() => { loadPhotos() }, [loadPhotos])
 
+  const [uploadMsg, setUploadMsg] = useState('')
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
     setUploading(true)
+    setUploadMsg('')
+    let success = 0
+    let fail = 0
     for (const file of Array.from(files)) {
       const formData = new FormData()
       formData.append('file', file)
-      await fetch('/api/admin/photos', { method: 'POST', body: formData })
+      try {
+        const res = await fetch('/api/admin/photos', { method: 'POST', body: formData })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          success++
+        } else {
+          fail++
+          setUploadMsg(data.error || '上传失败')
+        }
+      } catch {
+        fail++
+        setUploadMsg('网络错误')
+      }
     }
     setUploading(false)
+    if (success > 0 && fail === 0) setUploadMsg(`✅ 成功上传 ${success} 张图片`)
+    else if (success > 0) setUploadMsg(`⚠️ ${success} 张成功, ${fail} 张失败`)
     loadPhotos()
-    // Reset input
     e.target.value = ''
   }
 
@@ -455,8 +473,13 @@ function PhotosTab({ onSelectPhoto }: { onSelectPhoto?: (url: string) => void })
             {uploading ? '上传中...' : '点击选择图片或拖拽到此处'}
           </span>
           <span className="text-xs text-gray-400 dark:text-gray-500">
-            支持 JPG / PNG / GIF / WebP，单张不超过 5MB
+            支持 JPG / PNG / GIF / WebP，单张不超过 10MB
           </span>
+          {uploadMsg && (
+            <span className={`text-xs font-medium ${uploadMsg.includes('✅') || uploadMsg.includes('成功') ? 'text-green-500' : 'text-red-500'}`}>
+              {uploadMsg}
+            </span>
+          )}
           <input
             type="file"
             accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/avif"
