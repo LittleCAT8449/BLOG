@@ -53,6 +53,7 @@ export default function MarkdownEditor({ initialData, onSave, saving }: Markdown
   const [modal, setModal] = useState<ModalState>({ open: false, type: 'link' })
   const [modalText, setModalText] = useState('')
   const [modalUrl, setModalUrl] = useState('')
+  const [photos, setPhotos] = useState<{ name: string; url: string }[]>([])
 
   // Generate slug from title
   useEffect(() => {
@@ -120,6 +121,11 @@ export default function MarkdownEditor({ initialData, onSave, saving }: Markdown
         setModalText('')
         setModalUrl('')
         setModal({ open: true, type: 'image' })
+        // Fetch uploaded photos
+        fetch('/api/admin/photos')
+          .then((r) => r.json())
+          .then((data) => setPhotos(data.photos || []))
+          .catch(() => setPhotos([]))
         break
     }
   }
@@ -383,6 +389,27 @@ export default function MarkdownEditor({ initialData, onSave, saving }: Markdown
                     autoFocus
                     className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
                   />
+                </div>
+              )}
+              {modal.type === 'image' && photos.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">从图库选择</label>
+                  <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                    {photos.slice(0, 12).map((photo) => (
+                      <button
+                        key={photo.name}
+                        onClick={() => setModalUrl(photo.url)}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                          modalUrl === photo.url
+                            ? 'border-primary-500 ring-2 ring-primary-500/30'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
+                        }`}
+                        title={photo.name}
+                      >
+                        <img src={photo.url} alt={photo.name} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               <div>

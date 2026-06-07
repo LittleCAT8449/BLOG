@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Lock, Eye, FileText, Tag, Trash2, Edit, Plus, Unlock, Settings, ExternalLink, EyeOff } from 'lucide-react'
+import { Lock, Eye, FileText, Tag, Trash2, Edit, Plus, Unlock, Settings, ExternalLink, EyeOff, Image, Upload, Copy, Check, X } from 'lucide-react'
 import MarkdownEditor from '@/components/admin/MarkdownEditor'
 
 interface PostInfo {
@@ -30,6 +30,7 @@ interface SiteConfig {
   heroBackgroundImage: string
   heroTitle: string
   heroDescription: string
+  pageBackgroundImage?: string
 }
 
 // ── Tab: Post List ──
@@ -170,6 +171,7 @@ function SiteSettingsTab() {
     heroBackgroundImage: '',
     heroTitle: '',
     heroDescription: '',
+    pageBackgroundImage: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -240,6 +242,27 @@ function SiteSettingsTab() {
         </div>
       </div>
 
+      <div className="p-6 rounded-xl glass space-y-4">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">页面全局背景</h3>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            页面大背景图 URL（留空则使用默认渐变）
+          </label>
+          <input
+            type="text"
+            value={config.pageBackgroundImage || ''}
+            onChange={(e) => setConfig({ ...config, pageBackgroundImage: e.target.value })}
+            placeholder="https://... 或 /Photo/xxx.jpg"
+            className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          />
+        </div>
+        {config.pageBackgroundImage && (
+          <div className="rounded-lg overflow-hidden h-32 bg-gray-100 dark:bg-gray-800">
+            <img src={config.pageBackgroundImage} alt="背景预览" className="w-full h-full object-cover" />
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
@@ -249,6 +272,142 @@ function SiteSettingsTab() {
           {saving ? '保存中...' : '保存设置'}
         </button>
         {msg && <span className={`text-sm ${msg.includes('✅') ? 'text-green-500' : 'text-red-500'}`}>{msg}</span>}
+      </div>
+    </div>
+  )
+}
+
+// ── Tab: Photo Management ──
+function PhotosTab({ onSelectPhoto }: { onSelectPhoto?: (url: string) => void }) {
+  const [photos, setPhotos] = useState<{ name: string; url: string; size: number }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
+
+  const loadPhotos = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/photos')
+      const data = await res.json()
+      setPhotos(data.photos || [])
+    } catch { /* */ }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { loadPhotos() }, [loadPhotos])
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploading(true)
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append('file', file)
+      await fetch('/api/admin/photos', { method: 'POST', body: formData })
+    }
+    setUploading(false)
+    loadPhotos()
+    // Reset input
+    e.target.value = ''
+  }
+
+  const handleDelete = async (name: string) => {
+    if (!confirm(`确定删除「${name}」？`)) return
+    await fetch('/api/admin/photos', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: name }),
+    })
+    loadPhotos()
+  }
+
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url)
+    setCopied(url)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Upload zone */}
+      <div className="p-6 rounded-xl glass space-y-4">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">上传图片</h3>
+        <label className="flex flex-col items-center gap-3 p-8 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-400 dark:hover:border-primary-500 cursor-pointer transition-colors bg-white/30 dark:bg-gray-800/30">
+          <Upload className={`w-8 h-8 ${uploading ? 'text-primary-500 animate-bounce' : 'text-gray-400'}`} />
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {uploading ? '上传中...' : '点击选择图片或拖拽到此处'}
+          </span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            支持 JPG / PNG / GIF / WebP，单张不超过 5MB
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/avif"
+            multiple
+            onChange={handleUpload}
+            disabled={uploading}
+            className="hidden"
+          />
+        </label>
+      </div>
+
+      {/* Photo grid */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+          图片库 ({photos.length})
+        </h3>
+        {loading ? (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            ))}
+          </div>
+        ) : photos.length === 0 ? (
+          <p className="text-sm text-gray-400 py-8 text-center">暂无图片，上传一张吧</p>
+        ) : (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {photos.map((photo) => (
+              <div
+                key={photo.name}
+                className="group relative aspect-square rounded-xl overflow-hidden glass border border-gray-200 dark:border-gray-700"
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.name}
+                  className="w-full h-full object-cover"
+                />
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                  <button
+                    onClick={() => handleCopy(photo.url)}
+                    className="p-1.5 rounded-lg bg-white/90 text-gray-700 hover:bg-white transition-colors"
+                    title="复制 URL"
+                  >
+                    {copied === photo.url ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                  {onSelectPhoto && (
+                    <button
+                      onClick={() => onSelectPhoto(photo.url)}
+                      className="p-1.5 rounded-lg bg-primary-500/90 text-white hover:bg-primary-600 transition-colors"
+                      title="插入到编辑器"
+                    >
+                      <Image className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(photo.name)}
+                    className="p-1.5 rounded-lg bg-red-500/90 text-white hover:bg-red-600 transition-colors"
+                    title="删除"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/60 to-transparent">
+                  <p className="text-[10px] text-white truncate px-1">{photo.name}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -266,7 +425,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
 
   // Editor state
-  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'settings'>('posts')
+  const [activeTab, setActiveTab] = useState<'posts' | 'editor' | 'photos' | 'settings'>('posts')
   const [editingPost, setEditingPost] = useState<EditData | null>(null)
   const [loadingContent, setLoadingContent] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -425,6 +584,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'editor' as const, label: editingPost ? '编辑文章' : '写文章', icon: editingPost ? Edit : Plus },
     { id: 'posts' as const, label: '文章列表', icon: FileText },
+    { id: 'photos' as const, label: '图片管理', icon: Image },
     { id: 'settings' as const, label: '站点设置', icon: Settings },
   ]
 
@@ -509,6 +669,7 @@ export default function AdminDashboard() {
         </>
       )}
 
+      {activeTab === 'photos' && <PhotosTab />}
       {activeTab === 'settings' && <SiteSettingsTab />}
     </div>
   )

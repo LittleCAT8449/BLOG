@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes'
 import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import { getSiteConfig } from '@/lib/site-config'
 
 export const metadata: Metadata = {
   title: {
@@ -22,12 +23,23 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const siteConfig = getSiteConfig()
+
+  const bgStyle = siteConfig.pageBackgroundImage
+    ? {
+        backgroundImage: `url(${siteConfig.pageBackgroundImage})`,
+        backgroundSize: 'cover' as const,
+        backgroundPosition: 'center' as const,
+        backgroundAttachment: 'fixed' as const,
+      }
+    : {
+        background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #fdf4ff 100%)',
+      }
+
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body className="min-h-screen text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-300"
-        style={{
-          background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #fdf4ff 100%)',
-        }}
+        style={bgStyle}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex flex-col min-h-screen">

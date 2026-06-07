@@ -7,12 +7,14 @@ export interface SiteConfig {
   heroBackgroundImage: string
   heroTitle: string
   heroDescription: string
+  pageBackgroundImage: string
 }
 
 const defaultConfig: SiteConfig = {
   heroBackgroundImage: '',
   heroTitle: 'Welcome to My Blog',
   heroDescription: 'Thoughts, stories, and ideas about technology, design, and the world around us.',
+  pageBackgroundImage: '',
 }
 
 export function getSiteConfig(): SiteConfig {
